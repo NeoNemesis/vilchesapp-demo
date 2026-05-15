@@ -1,17 +1,19 @@
 import { useState } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { Login } from './pages/Login';
+import { Landing } from './pages/Landing';
+import { DemoSelector } from './pages/DemoSelector';
+import { Superadmin } from './pages/Superadmin';
 import { Dashboard } from './pages/Dashboard';
 import { Orders } from './pages/Orders';
 import { Projects } from './pages/Projects';
 import { Quotes } from './pages/Quotes';
 import { Sidebar } from './components/Sidebar';
-import type { Role } from './data/mockData';
+import { type Role, type Company, companies } from './data/mockData';
 
-function AppLayout({ role, onLogout }: { role: Role; onLogout: () => void }) {
+function AppLayout({ role, company, onLogout }: { role: Role; company: Company; onLogout: () => void }) {
   return (
-    <div className="flex min-h-screen bg-[#0a0a0a]">
-      <Sidebar role={role} onLogout={onLogout} />
+    <div className="flex min-h-screen bg-brand-dark">
+      <Sidebar role={role} company={company} onLogout={onLogout} />
       <main className="flex-1 ml-64 min-h-screen overflow-auto">
         <Routes>
           <Route path="/dashboard" element={<Dashboard />} />
@@ -26,29 +28,41 @@ function AppLayout({ role, onLogout }: { role: Role; onLogout: () => void }) {
 }
 
 export default function App() {
-  const [role, setRole] = useState<Role | null>(null);
+  const [session, setSession] = useState<{ role: Role; company: Company } | null>(null);
+
+  const handleSelect = (companySlug: string, role: Role) => {
+    const company = companies.find(c => c.slug === companySlug) ?? companies[0];
+    setSession({ role, company });
+  };
 
   return (
     <HashRouter>
       <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="/demo" element={<DemoSelector onSelect={handleSelect} />} />
         <Route
-          path="/"
+          path="/superadmin"
           element={
-            role ? (
-              <Navigate to="/dashboard" replace />
+            session?.role === 'superadmin'
+              ? <Superadmin />
+              : <Navigate to="/demo" replace />
+          }
+        />
+        <Route
+          path="/app/*"
+          element={
+            session && session.role !== 'superadmin' ? (
+              <AppLayout
+                role={session.role}
+                company={session.company}
+                onLogout={() => setSession(null)}
+              />
             ) : (
-              <Login onLogin={(r) => setRole(r)} />
+              <Navigate to="/demo" replace />
             )
           }
         />
-        {role ? (
-          <Route
-            path="/*"
-            element={<AppLayout role={role} onLogout={() => setRole(null)} />}
-          />
-        ) : (
-          <Route path="*" element={<Navigate to="/" replace />} />
-        )}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </HashRouter>
   );

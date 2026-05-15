@@ -9,7 +9,26 @@ export type OrderStatus =
 
 export type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'rejected';
 export type ProjectStatus = 'planning' | 'in_progress' | 'completed';
-export type Role = 'admin' | 'contractor';
+export type Role = 'admin' | 'contractor' | 'employee' | 'superadmin';
+
+export interface Company {
+  slug: string;
+  name: string;
+  short: string;
+  color: string;
+  domain: string;
+  industry: string;
+}
+
+export const companies: Company[] = [
+  { slug: 'byggmax',  name: 'Byggmax AB',          short: 'B', color: '#4AE54A', domain: 'byggmax.taskit.se',  industry: 'Bygg & Renovering' },
+  { slug: 'vilches',  name: 'Vilches Entreprenad', short: 'V', color: '#2C7A4B', domain: 'vilches.taskit.se',  industry: 'Mark & Anläggning' },
+  { slug: 'snickeri', name: 'Demo Snickeri AB',    short: 'S', color: '#3b82f6', domain: 'snickeri.taskit.se', industry: 'Snickeri & Inredning' },
+];
+
+export function getCompany(slug: string): Company {
+  return companies.find(c => c.slug === slug) ?? companies[0];
+}
 
 export interface Order {
   id: string;
